@@ -2,7 +2,9 @@
 let database = {
   users: {},
   articles: {},
-  nextArticleId: 1
+  nextArticleId: 1,
+  comments: {},
+  nextCommentId: 1
 };
 
 const routes = {
@@ -26,7 +28,20 @@ const routes = {
   },
   '/articles/:id/downvote': {
     'PUT': downvoteArticle
+  },
+  '/comments': {
+    'POST': newComment
+  },
+  '/comments/:id': {
+    'PUT': updateComment,
+    'DELETE': deleteComment
+  },
+  '/comments/:id/upvote': {
+  },
+  '/comments/:id/downvote': {
+
   }
+
 };
 
 function getUser(url, request) {
@@ -239,6 +254,62 @@ function downvote(item, username) {
   }
   return item;
 }
+
+// my code 123
+function newComment(url, request){
+    const requestComment = request.body && request.body.comment;
+    const response = {};
+
+if(requestComment && requestComment.body && requestComment.username
+  && database.users[requestComment.username] && database.articles[requestComment.articleId]){
+      const comment = {
+        id: database.nextCommentId++,
+        body: requestComment.body,
+        username: requestComment.username,
+        articleId: requestComment.articleId,
+        upvotedBy: [],
+        downvotedBy: []
+        };
+
+      database.comments[comment.id] = comment;
+      database.articles[comment.articleId].commentIds.push(comment.id);
+      database.users[comment.username].commentIds.push(comment.id);
+
+      response.body = {comment: comment};
+      response.status = 201;
+}else {
+  response.status = 400;
+}
+    return response;
+}
+
+function updateComment(url, request){
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (!id || !requestComment){
+    response.status = 400;
+  }else if(!savedComment){
+    response.status = 404;
+  }else{
+    savedComment.body = requestComment.body || savedComment.body;
+
+    response.body = {comment: savedComment};
+    response.status = 200;
+
+  }
+  return response;
+
+}
+
+function deleteComment(){
+
+}
+
+
+
 
 // Write all code above this line.
 
